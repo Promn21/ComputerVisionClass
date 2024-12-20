@@ -1,42 +1,32 @@
 import cv2 as cv
-print(cv.__version__)
 
-image = cv.imread("mewtwo.png")
+image1 = cv.imread("mewtwo.png")
+image2 = cv.imread("mew.png")
 
-gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+#greyscale
+gray_image1 = cv.cvtColor(image1, cv.COLOR_BGR2GRAY)
+gray_image2 = cv.cvtColor(image2, cv.COLOR_BGR2GRAY)
+#threshold
+_, binary_image1 = cv.threshold(gray_image1, 150, 255, cv.THRESH_BINARY)
+_, binary_image2 = cv.threshold(gray_image2, 150, 255, cv.THRESH_BINARY)
 
+#draw a black circle
+cv.circle(gray_image1, (gray_image1.shape[1] // 2, gray_image1.shape[0] // 2), 200, (1, 1, 1), 2)
 
-#def draw_line(image, start_x, start_y, end_x, end_y):
-    #x = start_x
-    #for y in range(start_y, end_y):
-       # image[y][x] = 0
-        #gray_image[y][400] = 0
+#canvas
+height, width = gray_image1.shape
+top_row = cv.hconcat([gray_image1, binary_image1]) 
+bottom_row = cv.hconcat([gray_image2, binary_image2]) 
+canvas = cv.vconcat([top_row, bottom_row]) 
 
-#def draw_line2(image, start_x, start_y, end_x, end_y):
-  #  for y,x in zip(range(start_y, end_y), (start_x, end_x)):
- #       image[y][x] = 0
+#images placing
+#mewtwo
+canvas[0:height, 0:width] = gray_image1  # Top1
+canvas[0:height, width:width * 2] = binary_image1  # Top2
+#mew
+canvas[height:height * 2, 0:width] = gray_image2  # Bottom1
+canvas[height:height * 2, width:width * 2] = binary_image2  # Bottom2
 
-#def draw_rectangle(image, start_x, start_y, end_x, end_y):
-   # for y in range(start_y, end_y):
-  #      for x in range(start_x, end_x):
-  #          image[y][x] = 0
+cv.imshow("Mewone + Mewtwo = Mewthree", canvas)
 
-def threasholding(image, threashold_val):
-    binary_image = image.copy()
-    height,width = image.shape
-    for y in range(0, height):
-        for x in range(0, width):
-            if binary_image[y][x] <= threashold_val:
-                binary_image[y][x] = 0
-            else:
-                binary_image[y][x] = 255
-    return binary_image
-
-ret, binary_image = cv.threasholding(gray_image, 150,cv.THRESH_BINARY)
-
-#draw_rectangle(gray_image, 150, 170, 320, 200)
-
-
-cv.imshow("pokemon", binary_image)
-#cv.imshow("pokemon", gray_image)
 cv.waitKey(0)
