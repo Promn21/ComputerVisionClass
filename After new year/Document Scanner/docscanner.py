@@ -47,7 +47,7 @@ def main() -> None:
     
 
     #Resize
-    ratio = 1500/img.shape[0] 
+    ratio = 1700/img.shape[0] 
     og = img.copy()
     resize_image = cv2.resize(img, (0, 0), fx=ratio, fy=ratio,interpolation=cv2.INTER_CUBIC)
 
