@@ -2,6 +2,9 @@ import cv2
 import argparse
 import numpy as np
 import numpy.typing as npt
+from fpdf import FPDF
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 def order_points(pts: npt.NDArray) -> npt.NDArray:
     """Order points in clockwise order (top-left, top-right, bottom-right, bottom-left)."""
@@ -34,6 +37,17 @@ def four_point_transform(image: npt.NDArray, pts: npt.NDArray) -> npt.NDArray:
     warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
     return warped
 
+def extract_text_from_image(image: npt.NDArray) -> str:
+    text = pytesseract.image_to_string(image, config='--psm 3')
+    return text
+
+def save_as_pdf(text: str, output_file: str) -> None:
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.add_font('Arial Unicode MS', '', r'Arial-Unicode.ttf')
+    pdf.set_font("Arial Unicode MS", size=12)
+    pdf.multi_cell(0, 10, text)
+    pdf.output(output_file)
 
 def main() -> None:
     #img Path
@@ -47,7 +61,7 @@ def main() -> None:
     
 
     #Resize
-    ratio = 1700/img.shape[0] 
+    ratio = 1500/img.shape[0] 
     og = img.copy()
     resize_image = cv2.resize(img, (0, 0), fx=ratio, fy=ratio,interpolation=cv2.INTER_CUBIC)
 
@@ -75,6 +89,15 @@ def main() -> None:
     warp_gray = cv2.cvtColor(warp, cv2.COLOR_BGR2GRAY)
     warp_final = cv2.adaptiveThreshold(warp_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 10)  
 
+    # Apply OCR to the thresholded image
+    extracted_text = extract_text_from_image(warp_final)
+    print("Extracted Text:\\n", extracted_text)
+    
+    # Save the extracted text to a file
+    with open("output.txt", "w") as file:
+        file.write(extracted_text)
+    print("Text saved to output.txt")
+
     #result image
     cv2.imshow(f"contour og img", resize_image)
     cv2.imshow(f"gray img", gray)
@@ -82,9 +105,9 @@ def main() -> None:
     cv2.imshow(f"edged img", edged)
     cv2.imshow(f"warp1 img", warp)
     cv2.imshow(f"warp2 img", warp_final)
-    #cv2.imshow(f"contours img", contours)
-    # cv2.imshow("Original", cv2.resize(og, (0, 0), fx=650/og.shape[0], fy=650/og.shape[0]))
-    # cv2.imshow("Scanned", cv2.resize(thresh, (0, 0), fx=650/thresh.shape[0], fy=650/thresh.shape[0]))
+    cv2.imshow("Original", cv2.resize(resize_image, (0, 0), fx=1000/resize_image.shape[0], fy=1000/resize_image.shape[0]))
+    cv2.imshow("Scanned", cv2.resize(warp_final, (0, 0), fx=1000/warp_final.shape[0], fy=1000/warp_final.shape[0]))
+    save_as_pdf(extracted_text, "output.pdf")
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
